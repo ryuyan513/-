@@ -3,6 +3,7 @@ import type { EnergyPrices, InventoryData, NewsArticle } from "../types";
 const EIA_KEY = import.meta.env.VITE_EIA_API_KEY || "DEMO_KEY";
 const EIA = "https://api.eia.gov/v2";
 const GDELT = "https://api.gdeltproject.org/api/v2/doc/doc";
+const CORS_PROXY = "https://corsproxy.io/?";
 
 // ─── シグナルキーワードマップ ────────────────────────────────────────────────
 export const SIGNAL_MAP: Record<string, string[]> = {
@@ -58,7 +59,8 @@ async function eiaFetch(url: string) {
 }
 
 async function gdeltFetch(url: string) {
-  const r = await fetch(url, { signal: AbortSignal.timeout(9000) });
+  const proxied = `${CORS_PROXY}${encodeURIComponent(url)}`;
+  const r = await fetch(proxied, { signal: AbortSignal.timeout(12000) });
   if (!r.ok) throw new Error(`GDELT ${r.status}`);
   return r.json();
 }
