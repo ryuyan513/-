@@ -21,6 +21,21 @@
 
 ---
 
+### Vercelで無料デプロイ（スマホからアクセス可能）/ Deploy to Vercel
+
+1. [vercel.com](https://vercel.com) でアカウント作成（GitHubログイン可）
+2. **"New Project"** → このリポジトリを選択
+3. **Environment Variables** に追加:
+   ```
+   EIA_API_KEY = あなたのEIAキー（任意、DEMO_KEYでも動作）
+   ```
+4. **Deploy** をクリック → 数分でスマホから `https://xxxx.vercel.app` でアクセス可能
+
+> VercelのPython関数（`api/`ディレクトリ）がバックエンドとして動作。  
+> フロントエンドはCDNで配信されるためスマホ・PCどちらでも高速アクセス可。
+
+---
+
 ### セットアップ / Quick Start
 
 #### 1. EIA APIキー取得（推奨）

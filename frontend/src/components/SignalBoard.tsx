@@ -12,7 +12,7 @@ const LEVEL_STYLES = {
     dot: "bg-red-500 animate-pulse",
     badge: "bg-red-900/60 text-red-300",
     label: "text-red-400",
-    risk: "HIGH RISK",
+    risk: "HIGH",
     riskJa: "高リスク",
   },
   yellow: {
@@ -34,7 +34,7 @@ const LEVEL_STYLES = {
   gray: {
     card: "bg-navy-900 border-navy-700",
     dot: "bg-slate-600",
-    badge: "bg-navy-800 text-slate-400",
+    badge: "bg-navy-800 text-slate-500",
     label: "text-slate-500",
     risk: "QUIET",
     riskJa: "動静なし",
@@ -47,40 +47,40 @@ function SignalCard({ sig }: { sig: Signal }) {
 
   return (
     <div
-      className={`relative border rounded-lg p-3 cursor-pointer transition-all duration-200 ${s.card}`}
+      className={`relative border rounded-lg p-2 sm:p-3 cursor-pointer transition-all duration-200 ${s.card} touch-manipulation`}
       onClick={() => setExpanded(!expanded)}
+      style={{ minHeight: 80 }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-base shrink-0">{sig.icon}</span>
+      <div className="flex items-start justify-between gap-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-sm shrink-0">{sig.icon}</span>
           <div className="min-w-0">
-            <div className={`text-xs font-bold leading-tight ${s.label}`}>
+            <div className={`text-[11px] sm:text-xs font-bold leading-tight ${s.label} truncate`}>
               {sig.nameJa}
             </div>
-            <div className="text-[10px] text-slate-500 leading-tight">
+            <div className="text-[9px] text-slate-500 leading-tight hidden sm:block">
               {sig.nameEn}
             </div>
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-1 shrink-0">
-          <div className="flex items-center gap-1.5">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
-            <span className={`text-[9px] font-bold tracking-wider ${s.label}`}>
+          <div className="flex items-center gap-1">
+            <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+            <span className={`text-[8px] sm:text-[9px] font-bold tracking-wide ${s.label}`}>
               {s.risk}
             </span>
           </div>
-          <span className={`text-[10px] px-1.5 py-0.5 rounded ${s.badge}`}>
-            {sig.count} 記事
+          <span className={`text-[9px] px-1 py-0.5 rounded ${s.badge}`}>
+            {sig.count}件
           </span>
         </div>
       </div>
 
-      <div className="mt-2 text-[10px] text-slate-500 leading-snug">{sig.desc}</div>
-
+      {/* センチメント表示: sm以上 */}
       {sig.count > 0 && (
-        <div className="mt-1.5 text-[10px] text-slate-500">
-          平均センチメント:{" "}
+        <div className="mt-1 text-[9px] text-slate-500 hidden sm:block">
+          感情:{" "}
           <span
             className={
               sig.avgTone < -2
@@ -96,6 +96,7 @@ function SignalCard({ sig }: { sig: Signal }) {
         </div>
       )}
 
+      {/* 展開ヘッドライン */}
       {expanded && sig.headlines.length > 0 && (
         <div className="mt-2 pt-2 border-t border-navy-700 space-y-1">
           {sig.headlines.map((h, i) => (
@@ -107,8 +108,8 @@ function SignalCard({ sig }: { sig: Signal }) {
       )}
 
       {sig.headlines.length > 0 && (
-        <div className="absolute bottom-1.5 right-2 text-[9px] text-slate-600">
-          {expanded ? "▲ 閉じる" : "▼ 最新記事"}
+        <div className="absolute bottom-1 right-1.5 text-[8px] text-slate-600">
+          {expanded ? "▲" : "▼"}
         </div>
       )}
     </div>
@@ -117,10 +118,10 @@ function SignalCard({ sig }: { sig: Signal }) {
 
 function SkeletonSignal() {
   return (
-    <div className="border border-navy-700 rounded-lg p-3 bg-navy-900 animate-pulse">
+    <div className="border border-navy-700 rounded-lg p-2 sm:p-3 bg-navy-900 animate-pulse" style={{ minHeight: 80 }}>
       <div className="flex justify-between">
-        <div className="h-4 bg-navy-700 rounded w-24" />
-        <div className="h-4 bg-navy-700 rounded w-12" />
+        <div className="h-3.5 bg-navy-700 rounded w-16" />
+        <div className="h-3.5 bg-navy-700 rounded w-10" />
       </div>
       <div className="h-3 bg-navy-700 rounded w-full mt-3" />
     </div>
@@ -132,24 +133,25 @@ export default function SignalBoard({ signals, loading }: Props) {
   const warnCount = signals.filter((s) => s.level === "yellow").length;
 
   return (
-    <div className="bg-navy-900 border border-navy-700 rounded-lg p-3">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-navy-900 border border-navy-700 rounded-lg p-2.5 sm:p-3">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between mb-2.5 flex-wrap gap-1.5">
         <div className="flex items-center gap-2">
           <span className="text-sm">🚨</span>
-          <h2 className="text-amber-400 font-bold text-xs tracking-widest uppercase">
-            地政学シグナル / Geopolitical Signals
+          <h2 className="text-amber-400 font-bold text-[11px] sm:text-xs tracking-widest uppercase">
+            地政学シグナル
           </h2>
-          <span className="text-slate-500 text-[10px]">— 過去24時間</span>
+          <span className="text-slate-500 text-[10px] hidden sm:inline">/ Geopolitical Signals — 過去24時間</span>
         </div>
         {!loading && (
-          <div className="flex items-center gap-2 text-[10px]">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {alertCount > 0 && (
-              <span className="px-2 py-0.5 bg-red-900/60 border border-red-700 rounded text-red-300 font-bold">
-                🔴 HIGH RISK ×{alertCount}
+              <span className="px-1.5 py-0.5 bg-red-900/60 border border-red-700 rounded text-red-300 font-bold text-[9px] sm:text-[10px]">
+                🔴 HIGH ×{alertCount}
               </span>
             )}
             {warnCount > 0 && (
-              <span className="px-2 py-0.5 bg-amber-900/60 border border-amber-700 rounded text-amber-300 font-bold">
+              <span className="px-1.5 py-0.5 bg-amber-900/60 border border-amber-700 rounded text-amber-300 font-bold text-[9px] sm:text-[10px]">
                 🟡 ELEVATED ×{warnCount}
               </span>
             )}
@@ -157,7 +159,12 @@ export default function SignalBoard({ signals, loading }: Props) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
+      {/*
+        モバイル: 2列
+        タブレット: 4列
+        PC: 7列（全シグナルを1行で表示）
+      */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2">
         {loading
           ? Array.from({ length: 7 }).map((_, i) => <SkeletonSignal key={i} />)
           : signals.map((sig) => <SignalCard key={sig.id} sig={sig} />)}

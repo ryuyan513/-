@@ -127,7 +127,7 @@ export default function App() {
         loading={loading}
       />
 
-      <div className="px-3 pb-3 space-y-3">
+      <div className="px-2 sm:px-3 pb-4 space-y-2.5 sm:space-y-3">
         <SignalBoard signals={signals} loading={loading} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
