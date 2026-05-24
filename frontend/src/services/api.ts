@@ -1,11 +1,14 @@
 import type { EnergyPrices, InventoryData, NewsArticle } from "../types";
 
-// EIA key: use env var (set as GitHub Secret) or fall back to the registered key
+// EIA key: env var (GitHub Secret) → registered key fallback
 const EIA_KEY =
   import.meta.env.VITE_EIA_API_KEY ||
   "YylT17ZFZlt4w5DVIOIZAEJZJuoIRYeW1eRP36w3";
 const EIA = "https://api.eia.gov/v2";
-const GDELT = "https://api.gdeltproject.org/api/v2/doc/doc";
+
+// Static news JSON served from same origin (updated hourly by GitHub Actions)
+// BASE_URL = '/-/' on GitHub Pages, '/' in dev
+const BASE = import.meta.env.BASE_URL;
 
 // ─── シグナルキーワードマップ ────────────────────────────────────────────────
 export const SIGNAL_MAP: Record<string, string[]> = {
@@ -60,32 +63,6 @@ async function eiaFetch(url: string) {
   return r.json();
 }
 
-// CORS proxies tried in order
-const PROXIES = [
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-];
-
-async function gdeltFetch(url: string): Promise<Record<string, unknown>> {
-  let lastErr: unknown;
-  for (const proxy of PROXIES) {
-    try {
-      const r = await fetch(proxy(url), { signal: AbortSignal.timeout(12000) });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const text = await r.text();
-      // allorigins sometimes wraps in {"contents":"...","status":{}}
-      const parsed = JSON.parse(text);
-      if (parsed?.contents && typeof parsed.contents === "string") {
-        return JSON.parse(parsed.contents) as Record<string, unknown>;
-      }
-      return parsed as Record<string, unknown>;
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr;
-}
-
 // ─── 公開API ─────────────────────────────────────────────────────────────────
 export async function fetchEnergyPrices(): Promise<EnergyPrices> {
   const result: EnergyPrices = { wti: null, brent: null, henry_hub: null, gasoline: null };
@@ -122,46 +99,38 @@ export async function fetchInventory(): Promise<InventoryData> {
   }
 }
 
-// Raw query strings (not pre-encoded) — gdeltFetch handles encoding via CORS proxy
-const ENERGY_TERMS = [
-  "OPEC", "Hormuz", "Saudi Arabia", "UAE", "ADNOC",
-  "shale oil", "shale gas", "LNG", "crude oil", "oil price",
-  "Brent crude", "WTI", "natural gas price", "petroleum",
-  "oil supply", "production cut", "Iran oil", "Russian oil",
-].join(" OR ");
+function parseGdeltArticles(
+  data: Record<string, unknown>,
+  withSignals: boolean
+): NewsArticle[] {
+  const articles = data?.articles as Record<string, string>[] | null;
+  if (!articles?.length) return [];
+  return articles.map((a): NewsArticle => ({
+    title: a.title ?? "",
+    url: a.url ?? "",
+    source: a.domain ?? "",
+    seen_date: a.seendate ?? "",
+    language: a.language ?? "English",
+    tone: parseFloat(a.tone ?? "0"),
+    ...(withSignals ? { signals: tagSignals(a.title ?? "") } : {}),
+  }));
+}
 
-const GLOBAL_TERMS = [
-  "war", "conflict", "sanctions", "military",
-  "ceasefire", "missile", "diplomacy", "geopolitical",
-].join(" OR ");
-
+// Reads static JSON files built into GitHub Pages (no CORS needed)
 export async function fetchEnergyNews(): Promise<NewsArticle[]> {
-  const url = `${GDELT}?query=${encodeURIComponent(ENERGY_TERMS)}&mode=ArtList&maxrecords=50&format=json&timespan=48h&sort=HybridRel`;
-  const d = await gdeltFetch(url);
-  return ((d?.articles as Record<string, string>[] | null) ?? []).map(
-    (a): NewsArticle => ({
-      title: a.title ?? "",
-      url: a.url ?? "",
-      source: a.domain ?? "",
-      seen_date: a.seendate ?? "",
-      language: a.language ?? "English",
-      tone: parseFloat(a.tone ?? "0"),
-      signals: tagSignals(a.title ?? ""),
-    })
-  );
+  const r = await fetch(`${BASE}news-energy.json`, {
+    cache: "no-cache",
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!r.ok) throw new Error(`news-energy ${r.status}`);
+  return parseGdeltArticles(await r.json(), true);
 }
 
 export async function fetchGlobalNews(): Promise<NewsArticle[]> {
-  const url = `${GDELT}?query=${encodeURIComponent(GLOBAL_TERMS)}&mode=ArtList&maxrecords=30&format=json&timespan=24h&sort=DateDesc`;
-  const d = await gdeltFetch(url);
-  return ((d?.articles as Record<string, string>[] | null) ?? []).map(
-    (a): NewsArticle => ({
-      title: a.title ?? "",
-      url: a.url ?? "",
-      source: a.domain ?? "",
-      seen_date: a.seendate ?? "",
-      language: a.language ?? "English",
-      tone: parseFloat(a.tone ?? "0"),
-    })
-  );
+  const r = await fetch(`${BASE}news-global.json`, {
+    cache: "no-cache",
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!r.ok) throw new Error(`news-global ${r.status}`);
+  return parseGdeltArticles(await r.json(), false);
 }
