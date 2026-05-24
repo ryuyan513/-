@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: #070b14;
+    color: #e2e8f0;
+    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #1a2744 #070b14;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: #070b14;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #1a2744;
+    border-radius: 3px;
+  }
+}
+
+@layer utilities {
+  .text-shadow-glow {
+    text-shadow: 0 0 12px currentColor;
+  }
+  .border-glow-red {
+    box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.4), 0 0 8px rgba(220, 38, 38, 0.15);
+  }
+  .border-glow-yellow {
+    box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.4), 0 0 8px rgba(217, 119, 6, 0.15);
+  }
+  .border-glow-green {
+    box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.3), 0 0 6px rgba(22, 163, 74, 0.1);
+  }
+}
