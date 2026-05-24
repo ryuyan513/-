@@ -26,14 +26,14 @@ def tag_signals(title: str) -> list[str]:
 
 
 def eia_get(url: str) -> dict:
-    with httpx.Client(timeout=12.0, follow_redirects=True) as c:
+    with httpx.Client(timeout=8.0, follow_redirects=True) as c:
         r = c.get(url)
         r.raise_for_status()
         return r.json()
 
 
 def gdelt_get(url: str) -> dict:
-    with httpx.Client(timeout=9.0, follow_redirects=True) as c:
+    with httpx.Client(timeout=8.0, follow_redirects=True) as c:
         r = c.get(url)
         r.raise_for_status()
         return r.json()
