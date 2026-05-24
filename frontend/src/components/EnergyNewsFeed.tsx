@@ -120,7 +120,7 @@ export default function EnergyNewsFeed({ articles, loading }: Props) {
           Array.from({ length: 7 }).map((_, i) => <SkeletonRow key={i} />)
         ) : articles.length === 0 ? (
           <div className="flex items-center justify-center h-28 text-slate-600 text-sm">
-            記事を取得中…
+            記事なし（48h以内の取得）
           </div>
         ) : (
           articles.map((a, i) => <ArticleRow key={`${a.url}-${i}`} a={a} />)

@@ -14,10 +14,6 @@ import type { EnergyPrices, InventoryData, NewsArticle, Signal, SignalDef } from
 
 const REFRESH_MS = 5 * 60 * 1000;
 
-const API_KEY_SET =
-  !!import.meta.env.VITE_EIA_API_KEY &&
-  import.meta.env.VITE_EIA_API_KEY !== "DEMO_KEY";
-
 const SIGNAL_DEFS: SignalDef[] = [
   { id: "hormuz", nameJa: "ホルムズ海峡", nameEn: "Hormuz Strait",     icon: "🚢", desc: "世界石油の約20%が通過する海峡" },
   { id: "opec",   nameJa: "OPEC / OPEC+", nameEn: "OPEC / OPEC+",     icon: "🛢️", desc: "世界最大の産油国カルテル" },
@@ -101,7 +97,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-navy-950 text-slate-200 font-mono select-none">
       <Header lastUpdated={lastUpdated} countdown={countdown} onRefresh={() => { setLoading(true); fetchAll(); }} />
-      <EnergyPricePanel prices={prices} inventory={inventory} apiKeySet={API_KEY_SET} loading={loading} />
+      <EnergyPricePanel prices={prices} inventory={inventory} loading={loading} />
       <div className="px-2 sm:px-3 pb-4 space-y-2.5 sm:space-y-3">
         <SignalBoard signals={signals} loading={loading} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">

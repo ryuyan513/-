@@ -3,7 +3,6 @@ import type { EnergyPrices, InventoryData } from "../types";
 interface Props {
   prices: EnergyPrices | null;
   inventory: InventoryData | null;
-  apiKeySet: boolean;
   loading: boolean;
 }
 
@@ -123,24 +122,11 @@ function SkeletonCard() {
   );
 }
 
-export default function EnergyPricePanel({ prices, inventory, apiKeySet, loading }: Props) {
+export default function EnergyPricePanel({ prices, inventory, loading }: Props) {
   const stock = inventory?.us_crude_stock;
 
   return (
     <div className="px-3 py-2 border-b border-navy-700 bg-navy-950">
-      {!apiKeySet && !loading && (
-        <div className="mb-2 text-[10px] text-amber-500 bg-amber-950/40 border border-amber-800/40 rounded px-3 py-1.5 flex flex-wrap items-center gap-1">
-          <span>⚠️ EIA価格: <strong>EIA_API_KEY</strong> 未設定（DEMO_KEY動作中）</span>
-          <a
-            href="https://www.eia.gov/opendata/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            無料登録 →
-          </a>
-        </div>
-      )}
 
       {/*
         モバイル: 横スクロール（スナップ付き）

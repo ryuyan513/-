@@ -1,9 +1,11 @@
 import type { EnergyPrices, InventoryData, NewsArticle } from "../types";
 
-const EIA_KEY = import.meta.env.VITE_EIA_API_KEY || "DEMO_KEY";
+// EIA key: use env var (set as GitHub Secret) or fall back to the registered key
+const EIA_KEY =
+  import.meta.env.VITE_EIA_API_KEY ||
+  "YylT17ZFZlt4w5DVIOIZAEJZJuoIRYeW1eRP36w3";
 const EIA = "https://api.eia.gov/v2";
 const GDELT = "https://api.gdeltproject.org/api/v2/doc/doc";
-const CORS_PROXY = "https://corsproxy.io/?";
 
 // ─── シグナルキーワードマップ ────────────────────────────────────────────────
 export const SIGNAL_MAP: Record<string, string[]> = {
@@ -58,11 +60,30 @@ async function eiaFetch(url: string) {
   return r.json();
 }
 
-async function gdeltFetch(url: string) {
-  const proxied = `${CORS_PROXY}${encodeURIComponent(url)}`;
-  const r = await fetch(proxied, { signal: AbortSignal.timeout(12000) });
-  if (!r.ok) throw new Error(`GDELT ${r.status}`);
-  return r.json();
+// CORS proxies tried in order
+const PROXIES = [
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+];
+
+async function gdeltFetch(url: string): Promise<Record<string, unknown>> {
+  let lastErr: unknown;
+  for (const proxy of PROXIES) {
+    try {
+      const r = await fetch(proxy(url), { signal: AbortSignal.timeout(12000) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const text = await r.text();
+      // allorigins sometimes wraps in {"contents":"...","status":{}}
+      const parsed = JSON.parse(text);
+      if (parsed?.contents && typeof parsed.contents === "string") {
+        return JSON.parse(parsed.contents) as Record<string, unknown>;
+      }
+      return parsed as Record<string, unknown>;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 // ─── 公開API ─────────────────────────────────────────────────────────────────
@@ -101,26 +122,24 @@ export async function fetchInventory(): Promise<InventoryData> {
   }
 }
 
-const ENERGY_Q = encodeURIComponent(
-  [
-    '"OPEC"', '"Hormuz"', '"Saudi Arabia"', '"UAE"', '"ADNOC"',
-    '"shale oil"', '"shale gas"', '"LNG"', '"crude oil"', '"oil price"',
-    '"Brent crude"', '"WTI"', '"natural gas price"', '"petroleum"',
-    '"oil supply"', '"production cut"', '"Iran oil"', '"Russian oil"',
-  ].join(" OR ")
-);
+// Raw query strings (not pre-encoded) — gdeltFetch handles encoding via CORS proxy
+const ENERGY_TERMS = [
+  "OPEC", "Hormuz", "Saudi Arabia", "UAE", "ADNOC",
+  "shale oil", "shale gas", "LNG", "crude oil", "oil price",
+  "Brent crude", "WTI", "natural gas price", "petroleum",
+  "oil supply", "production cut", "Iran oil", "Russian oil",
+].join(" OR ");
 
-const GLOBAL_Q = encodeURIComponent(
-  ["war", "conflict", "sanctions", "military", "ceasefire", "missile", "diplomacy", "geopolitical"].join(
-    " OR "
-  )
-);
+const GLOBAL_TERMS = [
+  "war", "conflict", "sanctions", "military",
+  "ceasefire", "missile", "diplomacy", "geopolitical",
+].join(" OR ");
 
 export async function fetchEnergyNews(): Promise<NewsArticle[]> {
-  const url = `${GDELT}?query=${ENERGY_Q}&mode=ArtList&maxrecords=50&format=json&timespan=24h&sort=HybridRel`;
+  const url = `${GDELT}?query=${encodeURIComponent(ENERGY_TERMS)}&mode=ArtList&maxrecords=50&format=json&timespan=48h&sort=HybridRel`;
   const d = await gdeltFetch(url);
-  return (d?.articles ?? []).map(
-    (a: Record<string, string>): NewsArticle => ({
+  return ((d?.articles as Record<string, string>[] | null) ?? []).map(
+    (a): NewsArticle => ({
       title: a.title ?? "",
       url: a.url ?? "",
       source: a.domain ?? "",
@@ -133,10 +152,10 @@ export async function fetchEnergyNews(): Promise<NewsArticle[]> {
 }
 
 export async function fetchGlobalNews(): Promise<NewsArticle[]> {
-  const url = `${GDELT}?query=${GLOBAL_Q}&mode=ArtList&maxrecords=30&format=json&timespan=12h&sort=DateDesc`;
+  const url = `${GDELT}?query=${encodeURIComponent(GLOBAL_TERMS)}&mode=ArtList&maxrecords=30&format=json&timespan=24h&sort=DateDesc`;
   const d = await gdeltFetch(url);
-  return (d?.articles ?? []).map(
-    (a: Record<string, string>): NewsArticle => ({
+  return ((d?.articles as Record<string, string>[] | null) ?? []).map(
+    (a): NewsArticle => ({
       title: a.title ?? "",
       url: a.url ?? "",
       source: a.domain ?? "",
