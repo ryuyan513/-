@@ -53,6 +53,7 @@ export default function App() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(REFRESH_MS / 1000);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "map">("dashboard");
   const countRef = useRef(REFRESH_MS / 1000);
 
   const fetchAll = useCallback(async () => {
@@ -99,14 +100,43 @@ export default function App() {
     <div className="min-h-screen bg-navy-950 text-slate-200 font-mono select-none">
       <Header lastUpdated={lastUpdated} countdown={countdown} onRefresh={() => { setLoading(true); fetchAll(); }} />
       <EnergyPricePanel prices={prices} inventory={inventory} loading={loading} />
-      <div className="px-2 sm:px-3 pb-4 space-y-2.5 sm:space-y-3">
-        <SignalBoard signals={signals} loading={loading} />
-        <MapPanel />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <EnergyNewsFeed articles={energyNews} loading={loading} />
-          <GlobalEventsFeed articles={globalNews} loading={loading} />
-        </div>
+
+      {/* Tab bar */}
+      <div className="flex border-b border-navy-700 bg-navy-900/60 px-2 sm:px-3">
+        {([
+          { id: "dashboard", label: "📊 ダッシュボード", en: "Dashboard" },
+          { id: "map",       label: "🌍 地図",          en: "Map" },
+        ] as const).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 text-[11px] sm:text-xs font-bold tracking-wider transition-colors border-b-2 -mb-px ${
+              activeTab === tab.id
+                ? "border-cyan-500 text-cyan-400"
+                : "border-transparent text-slate-500 hover:text-slate-300"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      {/* Tab content */}
+      {activeTab === "dashboard" && (
+        <div className="px-2 sm:px-3 pb-4 space-y-2.5 sm:space-y-3 pt-2.5">
+          <SignalBoard signals={signals} loading={loading} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <EnergyNewsFeed articles={energyNews} loading={loading} />
+            <GlobalEventsFeed articles={globalNews} loading={loading} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === "map" && (
+        <div className="px-2 sm:px-3 pb-4 pt-2.5">
+          <MapPanel />
+        </div>
+      )}
     </div>
   );
 }
