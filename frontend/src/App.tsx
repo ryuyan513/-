@@ -4,6 +4,7 @@ import EnergyPricePanel from "./components/EnergyPricePanel";
 import SignalBoard from "./components/SignalBoard";
 import EnergyNewsFeed from "./components/EnergyNewsFeed";
 import GlobalEventsFeed from "./components/GlobalEventsFeed";
+import MapPanel from "./components/MapPanel";
 import {
   fetchEnergyPrices,
   fetchInventory,
@@ -100,6 +101,7 @@ export default function App() {
       <EnergyPricePanel prices={prices} inventory={inventory} loading={loading} />
       <div className="px-2 sm:px-3 pb-4 space-y-2.5 sm:space-y-3">
         <SignalBoard signals={signals} loading={loading} />
+        <MapPanel />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <EnergyNewsFeed articles={energyNews} loading={loading} />
           <GlobalEventsFeed articles={globalNews} loading={loading} />
