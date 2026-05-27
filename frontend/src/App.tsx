@@ -121,22 +121,18 @@ export default function App() {
         ))}
       </div>
 
-      {/* Tab content */}
-      {activeTab === "dashboard" && (
-        <div className="px-2 sm:px-3 pb-4 space-y-2.5 sm:space-y-3 pt-2.5">
-          <SignalBoard signals={signals} loading={loading} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <EnergyNewsFeed articles={energyNews} loading={loading} />
-            <GlobalEventsFeed articles={globalNews} loading={loading} />
-          </div>
+      {/* Tab content — keep both mounted, toggle visibility to prevent map re-init */}
+      <div className={`px-2 sm:px-3 pb-4 space-y-2.5 sm:space-y-3 pt-2.5 ${activeTab === "dashboard" ? "" : "hidden"}`}>
+        <SignalBoard signals={signals} loading={loading} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <EnergyNewsFeed articles={energyNews} loading={loading} />
+          <GlobalEventsFeed articles={globalNews} loading={loading} />
         </div>
-      )}
+      </div>
 
-      {activeTab === "map" && (
-        <div className="px-2 sm:px-3 pb-4 pt-2.5">
-          <MapPanel />
-        </div>
-      )}
+      <div className={`px-2 sm:px-3 pb-4 pt-2.5 ${activeTab === "map" ? "" : "hidden"}`}>
+        <MapPanel />
+      </div>
     </div>
   );
 }

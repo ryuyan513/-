@@ -28,13 +28,15 @@ export default function Map2D() {
     mapRef.current = map;
 
     L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      { subdomains: "abcd", maxZoom: 19 }
+      "https://tile.openstreetmap.jp/styles/osm-bright-ja/{z}/{x}/{y}.png",
+      { maxZoom: 18, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }
     ).addTo(map);
 
-    L.control.attribution({ prefix: false })
-      .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>')
-      .addTo(map);
+    // Apply dark theme filter to the tile layer via CSS
+    const style = document.createElement("style");
+    style.textContent = `.leaflet-tile-pane { filter: invert(1) hue-rotate(200deg) brightness(0.65) saturate(1.4); }`;
+    document.head.appendChild(style);
+    (containerRef.current as HTMLDivElement & { _darkStyle?: HTMLStyleElement })._darkStyle = style;
 
     // Draw tanker routes as polylines
     TANKER_ROUTES.forEach((route) => {
@@ -98,6 +100,8 @@ export default function Map2D() {
     return () => {
       map.remove();
       mapRef.current = null;
+      const el = containerRef.current as HTMLDivElement & { _darkStyle?: HTMLStyleElement };
+      if (el?._darkStyle) { el._darkStyle.remove(); el._darkStyle = undefined; }
     };
   }, []);
 
