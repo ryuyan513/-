@@ -16,12 +16,21 @@ const SIGNAL_LABELS: Record<string, { ja: string; color: string }> = {
 };
 
 function parseSeen(seen: string): string {
-  if (!seen || seen.length < 15) return "";
+  if (!seen) return "";
   try {
-    const date = new Date(
-      `${seen.slice(0, 4)}-${seen.slice(4, 6)}-${seen.slice(6, 8)}T${seen.slice(9, 11)}:${seen.slice(11, 13)}:00Z`
-    );
+    // GDELT format: "20260527T123456Z"
+    let date: Date;
+    if (/^\d{8}T\d{6}Z$/.test(seen)) {
+      date = new Date(
+        `${seen.slice(0, 4)}-${seen.slice(4, 6)}-${seen.slice(6, 8)}T${seen.slice(9, 11)}:${seen.slice(11, 13)}:00Z`
+      );
+    } else {
+      // RSS format: "Tue, 27 May 2026 12:00:00 +0000" or ISO string
+      date = new Date(seen);
+    }
+    if (isNaN(date.getTime())) return "";
     const diff = Math.floor((Date.now() - date.getTime()) / 60000);
+    if (diff < 0) return "";
     if (diff < 60) return `${diff}分前`;
     if (diff < 1440) return `${Math.floor(diff / 60)}時間前`;
     return `${Math.floor(diff / 1440)}日前`;
