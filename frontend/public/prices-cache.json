@@ -1,17 +1,17 @@
 {
   "wti": {
-    "price": 78.97,
+    "price": 79.15,
     "change": 0.0,
-    "period": "2026-07-16"
+    "period": "2026-07-17"
   },
   "brent": {
-    "price": 84.95,
+    "price": 85.05,
     "change": 0.0,
-    "period": "2026-07-16"
+    "period": "2026-07-17"
   },
   "henry_hub": {
-    "price": 2.9,
+    "price": 2.86,
     "change": 0.0,
-    "period": "2026-07-16"
+    "period": "2026-07-17"
   }
 }
